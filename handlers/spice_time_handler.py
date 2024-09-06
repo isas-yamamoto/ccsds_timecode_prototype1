@@ -12,6 +12,7 @@ class SpiceTimeHandler(TimeHandlerBase):
     def __init__(self, epoch_str):
         super().__init__(epoch_str)
         self._load_spice_kernels()
+        self.boundary_et = spice.utc2et("1972-01-01T00:00:00")
 
     @staticmethod
     def _load_spice_kernels():
@@ -24,13 +25,16 @@ class SpiceTimeHandler(TimeHandlerBase):
         except Exception as e:
             logger.error(f"Error loading SPICE kernels: {e}")
 
+    def utc2et(self, utc_str):
+        et = spice.utc2et(self.epoch_str)
+        if et < self.boundary_et:
+            et -= 9.0
+        return et
+
     def total_seconds(self, utc):
         """Calculate the total seconds between the epoch and a given UTC time."""
         try:
-            epoch_et = spice.utc2et(self.epoch_str)
-            boundary = spice.utc2et("1972-01-01T00:00:00")
-            if epoch_et < boundary:
-                epoch_et -= 9
+            epoch_et = self.utc2et(self.epoch_str)
             utc_et = spice.utc2et(utc)
             return utc_et - epoch_et
         except Exception as e:
