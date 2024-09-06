@@ -22,5 +22,8 @@ class TimeHandler:
         elif library == "skyfield":
             from handlers.skyfield_time_handler import SkyfieldTimeHandler
             return SkyfieldTimeHandler(epoch_str)
+        elif library == "spacepy":
+            from handlers.spacepy_time_handler import SpacepyTimeHandler
+            return SpacepyTimeHandler(epoch_str)
         else:
             raise ValueError(f"Unsupported library specified: {library}")

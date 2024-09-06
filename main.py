@@ -29,9 +29,9 @@ def main():
     parser.add_argument(
         "--library",
         type=str,
-        choices=["astropy", "spice", "skyfield"],
+        choices=["astropy", "spice", "skyfield", "spacepy"],
         default="spice",
-        help="The library to use for time conversion ('astropy', 'spice', or 'skyfield').",
+        help="The library to use for time conversion ('astropy', 'spice', 'skyfield', or 'spacepy').",
     )
 
     # Parse arguments
