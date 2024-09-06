@@ -1,5 +1,5 @@
 import argparse
-from ccsds_timecode_cuc import CCSDS_TimeCode_CUC
+from ccsds_timecode.cuc import CCSDS_TimeCode_CUC
 
 
 def hexdump(data, sep=""):
