@@ -8,18 +8,42 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def strptime_utc(date_string: str, format_string: str) -> datetime:
+    """
+    Parse a date string into a UTC datetime object.
+
+    :param date_string: The date string to parse.
+    :param format_string: The format of the date string.
+    :return: A datetime object in UTC.
+    """
+    try:
+        dt = datetime.strptime(date_string, format_string)
+    except ValueError as e:
+        logger.error("Invalid date format: %s", e)
+        raise
+    return dt.replace(tzinfo=timezone.utc)
+
+
 class MyTimeHandler(TimeHandlerBase):
     """
     This class is independently implemented to provide time handling features
     using gmpy2.
     """
 
-    def __init__(self, epoch_str, prec=100):
+    def __init__(self, epoch_str: str, prec: int = 100):
         self.epoch_str = epoch_str
-        gmpy2.get_context().precision = prec
+        self.set_precision(prec)
 
-    def leap_second_correction(self, dt):
-        # Leap second correction
+    def set_precision(self, precision: int) -> None:
+        gmpy2.get_context().precision = precision
+
+    def leap_second_correction(self, dt: datetime) -> gmpy2.mpz:
+        """
+        Calculate the number of leap seconds that need to be added to the given datetime.
+
+        :param dt: The datetime object to correct for leap seconds.
+        :return: The number of leap seconds as a gmpy2.mpz object.
+        """
         targets = [
             "1972-07-01",
             "1973-01-01",
@@ -51,14 +75,19 @@ class MyTimeHandler(TimeHandlerBase):
         ]
         offset = 0
         for target in targets:
-            leap = datetime.strptime(target, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            leap = strptime_utc(target, "%Y-%m-%d")
             if dt < leap:
                 break
             offset += 1
         return gmpy2.mpz(offset)
 
-    def old_utc_correction(self, dt):
+    def old_utc_correction(self, dt: datetime) -> gmpy2.mpz:
         """
+        Correct the given datetime for old UTC discrepancies.
+
+        :param dt: The datetime object to correct.
+        :return: The calculated offset in seconds as a gmpy2.mpz object.
+
         Reference:
         - https://hpiers.obspm.fr/eop-pc/index.php?index=TAI-UTC_tab&lang=en
         - https://eco.mtk.nao.ac.jp/koyomi/wiki/B6A8C4EAC0A4B3A6BBFE2F1963.html
@@ -82,9 +111,9 @@ class MyTimeHandler(TimeHandlerBase):
         offset = gmpy2.mpz(0)
         if dt < datetime(1972, 1, 1).replace(tzinfo=timezone.utc):
             for param in params[::-1]:
-                start = datetime.strptime(param.start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                start = strptime_utc(param.start, "%Y-%m-%d")
                 if start <= dt:
-                    epoch = datetime.strptime(param.epoch, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                    epoch = strptime_utc(param.epoch, "%Y-%m-%d")
                     seconds = gmpy2.mpz((dt - epoch).total_seconds())
                     days = seconds / gmpy2.mpz(86400)
                     offset = gmpy2.mpfr(param.fixed) + days * gmpy2.mpfr(param.coeff)
@@ -93,14 +122,18 @@ class MyTimeHandler(TimeHandlerBase):
             offset = gmpy2.mpz(10)
         return offset
 
-    def timestamp(self, utc):
-        """Calculate the elapsed seconds from 1970-01-01"""
+    def timestamp(self, utc: str) -> gmpy2.mpfr:
+        """
+        Calculate the elapsed seconds since the epoch (1970-01-01) for the given UTC time.
+
+        :param utc: The UTC time as a string in ISO 8601 format.
+        :return: The calculated timestamp as a gmpy2.mpfr object.
+        """
         if utc.endswith("Z"):
             utc = utc[:-1]
         cols = utc.split(".")
-        dt = datetime.strptime(f"{cols[0]}", "%Y-%m-%dT%H:%M:%S").replace(
-            tzinfo=timezone.utc
-        )
+        dt = strptime_utc(f"{cols[0]}", "%Y-%m-%dT%H:%M:%S")
+
         timestamp = gmpy2.mpz(dt.timestamp())
         frac_seconds = gmpy2.mpfr("0." + cols[1]) if len(cols) == 2 else gmpy2.mpfr(0.0)
 
@@ -108,8 +141,13 @@ class MyTimeHandler(TimeHandlerBase):
         timestamp += self.leap_second_correction(dt)
         return gmpy2.mpfr(timestamp) + frac_seconds
 
-    def total_seconds(self, utc):
-        """Calculate the total seconds between the epoch and a given UTC time."""
+    def total_seconds(self, utc: str) -> gmpy2.mpfr:
+        """
+        Calculate the total seconds between the epoch and a given UTC time.
+
+        :param utc: The UTC time as a string in ISO 8601 format.
+        :return: The total seconds as a gmpy2.mpfr object.
+        """
         es_epoch = self.timestamp(self.epoch_str)
         es_utc = self.timestamp(utc)
         return es_utc - es_epoch
