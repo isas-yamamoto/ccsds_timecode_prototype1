@@ -29,9 +29,9 @@ def main():
     parser.add_argument(
         "--library",
         type=str,
-        choices=["astropy", "spice", "skyfield", "spacepy"],
-        default="spice",
-        help="The library to use for time conversion ('astropy', 'spice', 'skyfield', or 'spacepy').",
+        choices=["my", "astropy", "spice", "skyfield", "spacepy"],
+        default="my",
+        help="The library to use for time conversion ('my', 'astropy', 'spice', 'skyfield', or 'spacepy').",
     )
 
     # Parse arguments
@@ -49,7 +49,7 @@ def main():
     # Output results
     print(f"P-Field: {hexdump(ccsds_time_code.get_p_field(), ' ')}")
     print(f"T-Field: {hexdump(ccsds_time_code.get_t_field(args.utc), ' ')}")
-    print(f"Total Seconds: {ccsds_time_code.get_total_seconds(args.utc)}")
+    print(f"Total Seconds: {ccsds_time_code.get_total_seconds(args.utc):.16f}")
 
 
 if __name__ == "__main__":

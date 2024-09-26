@@ -8,12 +8,15 @@ class TimeHandler:
 
         Args:
             epoch_str (str): The epoch time string in ISO 8601 format.
-            library (str): The library to use for time conversion ('astropy' or 'spice').
+            library (str): The library to use for time conversion.
 
         Returns:
             TimeHandlerBase: An instance of the appropriate time handler.
         """
-        if library == "astropy":
+        if library == "my":
+            from handlers.my_time_handler import MyTimeHandler
+            return MyTimeHandler(epoch_str)
+        elif library == "astropy":
             from handlers.astropy_time_handler import AstropyTimeHandler
             return AstropyTimeHandler(epoch_str)
         elif library == "spice":
