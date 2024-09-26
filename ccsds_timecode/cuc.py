@@ -11,7 +11,7 @@ class CCSDS_TimeCode_CUC:
         basic_time_unit=1,
         num_basic_octets=4,
         num_fractional_octets=2,
-        library="astropy",
+        library="my",
     ):
         self.epoch = epoch
         self.time_code_id = time_code_id
