@@ -1,9 +1,5 @@
 from time_handler import TimeHandler
-
-
-class TimeCodeIdentificationException(Exception):
-    def __init__(self, message):
-        self.message = message
+from time_exceptions import TimeCodeIdentificationException
 
 
 class CCSDS_TimeCode_CUC:
