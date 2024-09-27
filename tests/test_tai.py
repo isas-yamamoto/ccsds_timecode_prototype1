@@ -534,9 +534,9 @@ class TestTai(unittest.TestCase):
         As of Feb. 2, 1968, the UTC-TAI difference was calculated as follows:
         days: 31 + 1 = 32
         offset: 4.2131700 + (365 + 365 + 32) * 0.002592 = 6.188274
-        total: ((365 * (1968 - 1958)) + 32 + 3) * 86400 + 6.188274 = 318384006.188274 s
+        total: ((365 * (1968 - 1958)) + 32 + 2) * 86400 + 6.188274 = 318297606.188274 s
         """
-        expected = gmpy2.mpfr("318384006.188274")
+        expected = gmpy2.mpfr("318297606.188274")
         actual = self.cuc.get_total_seconds("1968-02-02T00:00:00Z")
         self.assertAlmostEqual(actual, expected, delta=self.delta)
 
