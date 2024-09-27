@@ -15,6 +15,7 @@ def strptime_utc(date_string: str, format_string: str) -> datetime:
     :param date_string: The date string to parse.
     :param format_string: The format of the date string.
     :return: A datetime object in UTC.
+    :raises ValueError: If the date string cannot be parsed.
     """
     try:
         dt = datetime.strptime(date_string, format_string)
