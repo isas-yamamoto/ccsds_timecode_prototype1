@@ -1,5 +1,5 @@
 from time_handler import TimeHandler
-from time_exceptions import TimeCodeIdentificationException
+from time_exceptions import TimeCodeIdentificationException, EpochException
 
 
 class CCSDS_TimeCode_CUC:
@@ -19,12 +19,21 @@ class CCSDS_TimeCode_CUC:
                 "Time code identification must be 1 or 2 for CUC."
             )
 
+        self.time_handler = TimeHandler.create_handler(epoch, library)
+
+        if (time_code_id == 0b001) and (
+            self.time_handler.total_seconds("1958-01-01T00:00:00Z") != 0
+        ):
+            raise EpochException(
+                "The epoch must be 1958 January 1 when time code identification is 1. "
+                f"The specified epoch is {epoch}."
+            )
+
         self.epoch = epoch
         self.time_code_id = time_code_id
         self.basic_time_unit = basic_time_unit
         self.num_basic_octets = num_basic_octets
         self.num_fractional_octets = num_fractional_octets
-        self.time_handler = TimeHandler.create_handler(epoch, library)
 
     def get_p_field(self):
         """

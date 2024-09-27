@@ -1,6 +1,7 @@
 import unittest
 from struct import unpack
-from ccsds_timecode.cuc import CCSDS_TimeCode_CUC, TimeCodeIdentificationException
+from ccsds_timecode.cuc import CCSDS_TimeCode_CUC
+from time_exceptions import TimeCodeIdentificationException, EpochException
 
 
 class TestCcsdsTimecodeCuc(unittest.TestCase):
@@ -32,6 +33,10 @@ class TestCcsdsTimecodeCuc(unittest.TestCase):
 
         with self.assertRaises(TimeCodeIdentificationException):
             CCSDS_TimeCode_CUC(time_code_id=0b111)
+
+    def test_invalid_epoch(self):
+        with self.assertRaises(EpochException):
+            CCSDS_TimeCode_CUC(epoch="1958-01-01T00:00:01", time_code_id=0b001)
 
     def test_p_field_identification_agency_defined_epoch(self):
         cuc = CCSDS_TimeCode_CUC(time_code_id=0b010)
