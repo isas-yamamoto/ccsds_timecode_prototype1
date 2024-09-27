@@ -1,6 +1,11 @@
 from time_handler import TimeHandler
 
 
+class TimeCodeIdentificationException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
 class CCSDS_TimeCode_CUC:
     """Implements CCSDS Time Code Format with T-Field and P-Field."""
 
@@ -13,6 +18,11 @@ class CCSDS_TimeCode_CUC:
         num_fractional_octets=2,
         library="my",
     ):
+        if time_code_id != 0b001 and time_code_id != 0b010:
+            raise TimeCodeIdentificationException(
+                "Time code identification must be 1 or 2 for CUC."
+            )
+
         self.epoch = epoch
         self.time_code_id = time_code_id
         self.basic_time_unit = basic_time_unit
