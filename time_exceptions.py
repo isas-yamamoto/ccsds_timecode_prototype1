@@ -6,3 +6,8 @@ class TimeCodeIdentificationException(Exception):
 class EpochException(Exception):
     def __init__(self, message):
         self.message = message
+
+
+class OctetSizeException(Exception):
+    def __init__(self, message):
+        self.message = message

@@ -1,5 +1,9 @@
 from time_handler import TimeHandler
-from time_exceptions import TimeCodeIdentificationException, EpochException
+from time_exceptions import (
+    TimeCodeIdentificationException,
+    EpochException,
+    OctetSizeException,
+)
 
 
 class CCSDS_TimeCode_CUC:
@@ -87,6 +91,36 @@ class CCSDS_TimeCode_CUC:
 
         return bytes(basic_time_octets + fractional_time_octets)
 
+    def unpack_time_code(self, time_code: bytes) -> tuple:
+        p_field = {
+            "extension_flag": time_code[0] >> 7,
+            "time_code_id": (time_code[0] >> 4) & 0b111,
+            "num_basic_octets": ((time_code[0] >> 2) & 0b11) + 1,
+            "num_fractional_octets": time_code[0] & 0b11,
+        }
+        size_p_field = 1
+        if len(time_code) != (
+            p_field["num_basic_octets"]
+            + p_field["num_fractional_octets"]
+            + size_p_field
+        ):
+            length = (
+                p_field["num_basic_octets"]
+                + p_field["num_fractional_octets"]
+                + size_p_field
+            )
+            raise OctetSizeException(
+                f"The length of time code must be {length}. "
+                f"The number of basic octets is {p_field['num_basic_octets']}. "
+                f"The number of fractional time unit is {p_field['num_fractional_octets']}."
+            )
+        elapsed_seconds = 0
+        for value in time_code[1:]:
+            elapsed_seconds *= 256
+            elapsed_seconds += value
+        elapsed_seconds /= 2 ** (-p_field["num_fractional_octets"] * 8)
+        return p_field, self.time_handler.utc_string(elapsed_seconds)
+
     def get_total_seconds(self, utc):
         """
         Return the total seconds between the epoch and a given UTC time.
@@ -98,3 +132,6 @@ class CCSDS_TimeCode_CUC:
             float: Total seconds between the epoch and the given UTC time.
         """
         return self.time_handler.total_seconds(utc)
+
+    def utc_string(self, elapsed_seconds: float) -> str:
+        return self.time_handler.utc_string(elapsed_seconds)

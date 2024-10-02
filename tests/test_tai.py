@@ -6,7 +6,7 @@ import gmpy2
 
 class TestTai(unittest.TestCase):
     def setUp(self):
-        self.cuc = CCSDS_TimeCode_CUC(library="astropy")
+        self.cuc = CCSDS_TimeCode_CUC(library="my")
         self.delta = gmpy2.mpfr("1e-16")
 
     def test_zero_time(self):
