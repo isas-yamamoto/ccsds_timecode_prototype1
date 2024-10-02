@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from skyfield.api import load, utc
 from .time_handler_base import TimeHandlerBase
 
@@ -19,8 +19,9 @@ class SkyfieldTimeHandler(TimeHandlerBase):
             self.boundary_time = self.ts.utc(1972, 1, 1)
         except Exception as e:
             logger.error(f"Error loading Skyfield timescale: {e}")
+        self.epoch_time = self._utc2time(self.epoch_str)
 
-    def utc2time(self, utc_str):
+    def _utc2time(self, utc_str):
         dt = datetime.strptime(utc_str, "%Y-%m-%dT%H:%M:%S%z")
         utc_time = self.ts.from_datetime(dt.replace(tzinfo=utc))
         if utc_time < self.boundary_time:
@@ -30,10 +31,14 @@ class SkyfieldTimeHandler(TimeHandlerBase):
     def total_seconds(self, utc_str):
         """Calculate the total seconds between the epoch and a given UTC time."""
         try:
-            epoch_time = self.utc2time(self.epoch_str)
-            utc_time = self.utc2time(utc_str)
-            total_seconds = (utc_time - epoch_time) * 86400
+            utc_time = self._utc2time(utc_str)
+            total_seconds = (utc_time - self.epoch_time) * 86400
             return total_seconds
         except Exception as e:
             logger.error(f"Error in time conversion with SkyField: {e}")
             return None
+
+    def utc_string(self, elapsed_seconds: float) -> str:
+        """Convert elapsed seconds since the epoch to a UTC string in ISO format."""
+        utc_time = self.epoch_time + timedelta(seconds=elapsed_seconds)
+        return utc_time.utc_strftime("%Y-%m-%dT%H:%M:%S.%f")
