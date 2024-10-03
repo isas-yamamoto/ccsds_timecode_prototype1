@@ -1,6 +1,7 @@
 import gmpy2
 from struct import pack
 from time_handler import TimeHandler
+from time_exceptions import ReservedForFutureUse
 
 
 class CCSDS_TimeCode_CDS:
@@ -15,6 +16,9 @@ class CCSDS_TimeCode_CDS:
         length_of_subms_segment=0b01,
         library="my",
     ):
+        if length_of_subms_segment == 0b11:
+            raise ReservedForFutureUse("not implemented")
+        
         self.epoch = epoch
         self.time_code_id = time_code_id
         self.epoch_id = epoch_id
@@ -59,7 +63,10 @@ class CCSDS_TimeCode_CDS:
 
         # Prepare DAY
         days = int(gmpy2.floor(total_seconds // 86400))
-        day_octets = pack(">H", days)
+        if self.length_of_day_segment == 0:
+            day_octets = pack(">H", days)
+        else:
+            day_octets = pack(">I", days)[1:]
         rem = total_seconds - (days * 86400)
 
         # Calculate ms_of_day
@@ -76,8 +83,6 @@ class CCSDS_TimeCode_CDS:
             elif self.length_of_subms_segment == 0b10:
                 rem *= 1e12
                 subms_octets = pack(">I", int(rem))
-            elif self.length_of_subms_segment == 0b11:
-                raise ValueError("not implemented")
         return day_octets + ms_octets + subms_octets
 
     def get_total_seconds(self, utc):

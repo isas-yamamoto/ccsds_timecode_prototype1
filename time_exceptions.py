@@ -11,3 +11,7 @@ class EpochException(Exception):
 class OctetSizeException(Exception):
     def __init__(self, message):
         self.message = message
+
+class ReservedForFutureUse(Exception):
+    def __init__(self, message):
+        self.message = message
