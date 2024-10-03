@@ -1,4 +1,4 @@
-import gmpy2
+import math
 from struct import pack
 from time_handler import TimeHandler
 from time_exceptions import ReservedForFutureUse
@@ -62,7 +62,7 @@ class CCSDS_TimeCode_CDS:
             return bytes()
 
         # Prepare DAY
-        days = int(gmpy2.floor(total_seconds // 86400))
+        days = int(math.floor(total_seconds // 86400))
         if self.length_of_day_segment == 0:
             day_octets = pack(">H", days)
         else:
@@ -70,7 +70,7 @@ class CCSDS_TimeCode_CDS:
         rem = total_seconds - (days * 86400)
 
         # Calculate ms_of_day
-        ms_of_day = int(gmpy2.floor(rem * 1e3))
+        ms_of_day = int(math.floor(rem * 1e3))
         ms_octets = pack(">I", ms_of_day)
         rem -= ms_of_day * 1e-3
 
