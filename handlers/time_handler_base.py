@@ -11,3 +11,8 @@ class TimeHandlerBase(ABC):
     def total_seconds(self, utc):
         """Calculate the total seconds between the epoch and a given UTC time."""
         pass
+
+    @abstractmethod
+    def utc_string(self, elapsed_seconds: float) -> str:
+        """Convert elapsed seconds since the epoch to a UTC string in ISO format."""
+        pass
