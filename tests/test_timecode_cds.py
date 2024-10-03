@@ -76,7 +76,7 @@ class TestCcsdsTimecodeCds(unittest.TestCase):
         """
         cds = CCSDS_TimeCode_CDS(length_of_subms_segment=0b10, library="my")
         actual = cds.get_t_field("1961-01-01T00:00:00Z")
-        day = bytes([0x00, 0x04, 0x48])
+        day = bytes([0x04, 0x48])
         ms_of_day = bytes([0x00, 0x00, 0x05, 0x8E])
         subms_of_ms = bytes([0x30, 0xC1, 0xB0, 0x80])
         expected = day + ms_of_day + subms_of_ms
