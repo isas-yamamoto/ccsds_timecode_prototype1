@@ -1,7 +1,15 @@
 import math
 from struct import pack
-from time_exceptions import ReservedForFutureUse
+from time_exceptions import OctetSizeException, ReservedForFutureUse
 from ccsds_timecode.timecode_base import CCSDS_TimeCode
+
+
+def unpack_uint(data):
+    value = 0
+    for datum in data:
+        value <<= 8
+        value += datum
+    return value
 
 
 class CCSDS_TimeCode_CDS(CCSDS_TimeCode):
@@ -116,3 +124,53 @@ class CCSDS_TimeCode_CDS(CCSDS_TimeCode):
                 subms_octets = pack(">I", int(rem))
         return day_octets + ms_octets + subms_octets
 
+    def unpack_time_code(self, time_code: bytes) -> tuple:
+        """
+        Unpacks a time code from bytes into a dictionary of fields and elapsed time.
+
+        Args:
+            time_code (bytes): The time code as a byte sequence.
+
+        Returns:
+            tuple: A tuple containing a dictionary of parsed fields and the UTC time string.
+
+        Raises:
+            OctetSizeException: If the time code length is invalid.
+        """
+        p_field = {
+            "extension_flag": time_code[0] >> 7,
+            "time_code_id": (time_code[0] >> 4) & 0b111,
+            "epoch_id": (time_code[0] >> 3) & 0b1,
+            "length_of_day_segment": (time_code[0] >> 2) & 0b1,
+            "length_of_subms_segment": time_code[0] & 0b11,
+        }
+        size_p_field = 1
+        size_day = 2 if p_field["length_of_day_segment"] == 0 else 3
+        size_ms = 4
+        if p_field["length_of_subms_segment"] == 0b00:
+            size_subms = 0
+            subms_unit = 0
+        elif p_field["length_of_subms_segment"] == 0b01:
+            size_subms = 2
+            subms_unit = 1e-6
+        elif p_field["length_of_subms_segment"] == 0b10:
+            size_subms = 4
+            subms_unit = 1e-9
+        else:
+            raise ReservedForFutureUse("not implemented")
+
+        length = size_p_field + size_day + size_ms + size_subms
+        if len(time_code) != length:
+            raise OctetSizeException(
+                f"The length of time code must be {length}. "
+                f"The length of day segment is {size_day}. "
+                f"The length of ms_of_day segment is {size_ms}. "
+                f"The length of subms_of_ms segment is {size_subms}. "
+            )
+
+        elapsed_seconds = 0
+        days = unpack_uint(time_code[1 : 1 + size_day])
+        ms = unpack_uint(time_code[1 + size_day : 1 + size_day + size_ms])
+        subms = unpack_uint(time_code[1 + size_day + size_ms :]) if size_ms > 0 else 0
+        elapsed_seconds = days * 86400 + ms * 1e-3 + subms * subms_unit
+        return p_field, self.time_handler.utc_string(elapsed_seconds)

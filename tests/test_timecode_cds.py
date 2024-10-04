@@ -29,12 +29,27 @@ class TestCcsdsTimecodeCds(unittest.TestCase):
         DAY: 365 = 0x016d
         ms_of_day: 0
         """
-        cds = CCSDS_TimeCode_CDS(library="my")
-        actual = cds.get_t_field("1959-01-01T00:00:00Z")
         day = bytes([0x01, 0x6D])
         ms_of_day = bytes([0x00, 0x00, 0x00, 0x00])
         subms_of_ms = bytes([0x00, 0x00])
-        expected = day + ms_of_day + subms_of_ms
+        data = day + ms_of_day + subms_of_ms
+
+        cds = CCSDS_TimeCode_CDS(library="my")
+        actual = cds.get_t_field("1959-01-01T00:00:00Z")
+        expected = data
+        self.assertEqual(actual, expected)
+
+        """
+        Extension: 0b0
+        Time code identification: 0b100
+        Epoch identification: 0 ... TAI Epoch (1958-01-01 00:00:00)
+        length of day segment: 0b0 ... 16bits
+        length of submillisecond segment: 0b01 ... 16bit(microsecond)
+        => p-field: 0b0_100_0_0_01 = 0x41
+        """
+        p_field_data = bytes([0x41])
+        _, actual = cds.unpack_time_code(p_field_data + data)
+        expected = "1959-01-01T00:00:00.000000"
         self.assertEqual(actual, expected)
 
     def test_1961_01_01_subms_absent(self):
@@ -44,12 +59,28 @@ class TestCcsdsTimecodeCds(unittest.TestCase):
         ms_of_day: 1.4228180 * 1e3 = 1422 = 0x0000058e
         subms_of_ms: None
         """
-        cds = CCSDS_TimeCode_CDS(length_of_subms_segment=0b00, library="my")
-        actual = cds.get_t_field("1961-01-01T00:00:00Z")
         day = bytes([0x04, 0x48])
         ms_of_day = bytes([0x00, 0x00, 0x05, 0x8E])
         subms_of_ms = bytes([])
-        expected = day + ms_of_day + subms_of_ms
+        data = day + ms_of_day + subms_of_ms
+
+        cds = CCSDS_TimeCode_CDS(length_of_subms_segment=0b00, library="my")
+        actual = cds.get_t_field("1961-01-01T00:00:00Z")
+        expected = data
+        self.assertEqual(actual, expected)
+
+        """
+        Extension: 0b0
+        Time code identification: 0b100
+        Epoch identification: 0 ... TAI Epoch (1958-01-01 00:00:00)
+        length of day segment: 0b0 ... 16bits
+        length of submillisecond segment: 0b00 ... absent
+        => p-field: 0b0_100_0_0_00 = 0x40
+        total_seconds: 94694401.422 (not 94694401.422818)
+        """
+        p_field_data = bytes([0x40])
+        _, actual = cds.unpack_time_code(p_field_data + data)
+        expected = "1960-12-31T23:59:59.999182"
         self.assertEqual(actual, expected)
 
     def test_1961_01_01_microseconds(self):
@@ -87,7 +118,7 @@ class TestCcsdsTimecodeCds(unittest.TestCase):
         check reserved
         """
         with self.assertRaises(ReservedForFutureUse):
-            cds = CCSDS_TimeCode_CDS(length_of_subms_segment=0b11, library="my")
+            CCSDS_TimeCode_CDS(length_of_subms_segment=0b11, library="my")
 
     def test_1961_01_01_day_segment_24bits(self):
         """
@@ -107,3 +138,21 @@ class TestCcsdsTimecodeCds(unittest.TestCase):
         subms_of_ms = bytes([])
         expected = day + ms_of_day + subms_of_ms
         self.assertEqual(actual, expected)
+
+    def test_unpack_1958_01_01(self):
+        """
+        Extension: 0b0
+        Time code identification: 0b100
+        Epoch identification: 0 ... TAI Epoch (1958-01-01 00:00:00)
+        length of day segment: 0b0 ... 16bits
+        length of submillisecond segment: 0b00 ... absent
+        => p-field: 0b0_100_0_0_00 = 0x40
+        """
+        cds = CCSDS_TimeCode_CDS()
+        p_field = bytes([0x40])
+        day = bytes([0x00, 0x00])
+        ms = bytes([0x00, 0x00, 0x00, 0x00])
+        subms = bytes([])
+        _, utcstr = cds.unpack_time_code(p_field + day + ms + subms)
+        expected = "1958-01-01T00:00:00.000000"
+        self.assertEqual(utcstr, expected)

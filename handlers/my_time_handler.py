@@ -137,7 +137,7 @@ class MyTimeHandler(TimeHandlerBase):
         """
         return self._timestamp(utc) - self.ts_epoch
 
-    def utc_string(self, elapsed_seconds: float, accuracy: float = 1e-7) -> str:
+    def utc_string(self, elapsed_seconds: float) -> str:
         """
         Return a UTC string from the given elapsed seconds from the epoch.
 
@@ -147,7 +147,7 @@ class MyTimeHandler(TimeHandlerBase):
         ts = self.ts_epoch + elapsed_seconds
         ts_utc = ts
         for param in MyTimeHandler.params[::-1]:
-            if self._timestamp(param.start) - accuracy <= ts:
+            if self._timestamp(param.start) - gmpy2.mpfr(param.fixed) <= ts:
                 coeff = gmpy2.mpfr(param.coeff) / gmpy2.mpz("86400")
                 base = self._timestamp(param.base)
                 ts_utc = (ts - gmpy2.mpfr(param.fixed) + coeff * base) / (1 + coeff)

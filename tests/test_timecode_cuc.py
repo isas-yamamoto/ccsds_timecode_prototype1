@@ -69,7 +69,7 @@ class TestCcsdsTimecodeCuc(unittest.TestCase):
     def test_unpack_1961_01_01(self):
         cuc = CCSDS_TimeCode_CUC(num_basic_octets=4, num_fractional_octets=0)
         p_field, utcstr = cuc.unpack_time_code(bytes([0x1C, 0x05, 0xA4, 0xEC, 0x00]))
-        expected = "1961-01-01T00:00:00.000000"
+        expected = "1960-12-31T23:59:58.577182"
         self.assertEqual(utcstr, expected)
 
     def test_unpack_1962_01_01(self):

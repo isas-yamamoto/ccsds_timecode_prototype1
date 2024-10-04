@@ -61,6 +61,15 @@ class TestTai(unittest.TestCase):
         actual = self.handler.utc_string(94694401.422818)
         self.assertEqual(actual, expected)
 
+    def test_1961_01_01_utc_round(self):
+        """
+        Total Seconds: 94694401.422818
+        Use value: 94694401.422 -> 1960-12-31T23:59:59.999182
+        """
+        expected = "1960-12-31T23:59:59.999182"
+        actual = self.handler.utc_string(94694401.422)
+        self.assertEqual(actual, expected)
+
     def test_1961_01_02_utc(self):
         """
         Tests the total seconds from January 1, 1958, to Janulary 2, 1961.
