@@ -1,10 +1,10 @@
 import math
 from struct import pack
-from time_handler import TimeHandler
 from time_exceptions import ReservedForFutureUse
+from ccsds_timecode.timecode_base import CCSDS_TimeCode
 
 
-class CCSDS_TimeCode_CDS:
+class CCSDS_TimeCode_CDS(CCSDS_TimeCode):
     """Implements CCSDS Time Code Format with T-Field and P-Field."""
 
     def __init__(
@@ -16,6 +16,8 @@ class CCSDS_TimeCode_CDS:
         length_of_subms_segment=0b01,
         library="my",
     ):
+        super().__init__(epoch, library)
+
         if length_of_subms_segment == 0b11:
             raise ReservedForFutureUse("not implemented")
 
@@ -24,7 +26,6 @@ class CCSDS_TimeCode_CDS:
         self.epoch_id = epoch_id
         self.length_of_day_segment = length_of_day_segment
         self.length_of_subms_segment = length_of_subms_segment
-        self.time_handler = TimeHandler.create_handler(epoch, library)
 
     def __str__(self) -> str:
         epoch_id_str = {
@@ -64,19 +65,17 @@ class CCSDS_TimeCode_CDS:
 
     def get_contents(self, total_seconds):
         """
-        Convert a time duration given in total seconds into three components:
-        - days: The total number of full days (24-hour periods) within the given seconds.
-        - ms_of_day: The remaining milliseconds within the current day (after accounting for full days).
-        - rem: The remaining fractional seconds (sub-millisecond precision) after removing the full days and milliseconds.
+        Convert total seconds into days, milliseconds of the day,
+        and remaining fractional seconds.
 
-        Parameters:
-        - total_seconds (float): The total duration in seconds, potentially including fractional seconds.
+        Args:
+            total_seconds (float): Duration in seconds.
 
         Returns:
-        - tuple: A tuple containing:
-            - days (int): The number of full days.
-            - ms_of_day (int): The number of milliseconds that remain within the current day.
-            - rem (float): The remaining fractional seconds (sub-millisecond part).
+            tuple: (days, ms_of_day, rem)
+                - days (int): Number of full days.
+                - ms_of_day (int): Milliseconds within the current day.
+                - rem (float): Remaining fractional seconds.
         """
         days = int(math.floor(total_seconds // 86400))
         rem = total_seconds - (days * 86400)
@@ -117,14 +116,3 @@ class CCSDS_TimeCode_CDS:
                 subms_octets = pack(">I", int(rem))
         return day_octets + ms_octets + subms_octets
 
-    def get_total_seconds(self, utc):
-        """
-        Return the total seconds between the epoch and a given UTC time.
-
-        Args:
-            utc (str): The UTC time string in ISO 8601 format.
-
-        Returns:
-            float: Total seconds between the epoch and the given UTC time.
-        """
-        return self.time_handler.total_seconds(utc)

@@ -1,12 +1,12 @@
-from time_handler import TimeHandler
 from time_exceptions import (
     TimeCodeIdentificationException,
     EpochException,
     OctetSizeException,
 )
+from ccsds_timecode.timecode_base import CCSDS_TimeCode
 
 
-class CCSDS_TimeCode_CUC:
+class CCSDS_TimeCode_CUC(CCSDS_TimeCode):
     """Implements CCSDS Time Code Format with T-Field and P-Field."""
 
     def __init__(
@@ -18,12 +18,12 @@ class CCSDS_TimeCode_CUC:
         num_fractional_octets=2,
         library="my",
     ):
+        super().__init__(epoch, library)
+
         if time_code_id != 0b001 and time_code_id != 0b010:
             raise TimeCodeIdentificationException(
                 "Time code identification must be 1 or 2 for CUC."
             )
-
-        self.time_handler = TimeHandler.create_handler(epoch, library)
 
         if (time_code_id == 0b001) and (
             self.time_handler.total_seconds("1958-01-01T00:00:00Z") != 0
@@ -107,6 +107,18 @@ class CCSDS_TimeCode_CUC:
         return bytes(basic_time_octets + fractional_time_octets)
 
     def unpack_time_code(self, time_code: bytes) -> tuple:
+        """
+        Unpacks a time code from bytes into a dictionary of fields and elapsed time.
+
+        Args:
+            time_code (bytes): The time code as a byte sequence.
+
+        Returns:
+            tuple: A tuple containing a dictionary of parsed fields and the UTC time string.
+
+        Raises:
+            OctetSizeException: If the time code length is invalid.
+        """
         p_field = {
             "extension_flag": time_code[0] >> 7,
             "time_code_id": (time_code[0] >> 4) & 0b111,
@@ -135,18 +147,3 @@ class CCSDS_TimeCode_CUC:
             elapsed_seconds += value
         elapsed_seconds /= 2 ** (-p_field["num_fractional_octets"] * 8)
         return p_field, self.time_handler.utc_string(elapsed_seconds)
-
-    def get_total_seconds(self, utc):
-        """
-        Return the total seconds between the epoch and a given UTC time.
-
-        Args:
-            utc (str): The UTC time string in ISO 8601 format.
-
-        Returns:
-            float: Total seconds between the epoch and the given UTC time.
-        """
-        return self.time_handler.total_seconds(utc)
-
-    def utc_string(self, elapsed_seconds: float) -> str:
-        return self.time_handler.utc_string(elapsed_seconds)
