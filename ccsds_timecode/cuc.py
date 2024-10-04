@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from time_exceptions import (
     TimeCodeIdentificationException,
     EpochException,
@@ -20,7 +20,7 @@ def _strptime(date_string: str) -> datetime:
             break
         except ValueError:
             pass
-    return dt
+    return dt.replace(tzinfo=timezone.utc)
 
 
 class CCSDS_TimeCode_CUC:
@@ -133,8 +133,7 @@ class CCSDS_TimeCode_CUC:
             elapsed_seconds += value
         elapsed_seconds /= 2 ** (-p_field["num_fractional_octets"] * 8)
 
-        dt = self.dt_epoch + timedelta(seconds=elapsed_seconds)
-        return p_field, dt.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        return self.utc_string(elapsed_seconds)
 
     def get_total_seconds(self, utc):
         """
@@ -154,4 +153,5 @@ class CCSDS_TimeCode_CUC:
         return (dt_utc - self.dt_epoch).total_seconds()
 
     def utc_string(self, elapsed_seconds: float) -> str:
-        return self.time_handler.utc_string(elapsed_seconds)
+        dt = self.dt_epoch + timedelta(seconds=elapsed_seconds)
+        return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")
