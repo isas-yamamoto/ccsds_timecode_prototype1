@@ -22,32 +22,35 @@ class CCSDS_TimeCode_CUC:
             raise TimeCodeIdentificationException(
                 "Time code identification must be 1 or 2 for CUC."
             )
-        self.epoch = epoch
-        self.time_code_id = time_code_id
-        self.basic_time_unit = basic_time_unit
-        self.num_basic_octets = num_basic_octets
-        self.num_fractional_octets = num_fractional_octets
+
         self.time_handler = TimeHandler.create_handler(epoch, library)
-        self.handler = TimeHandler.create_handler(
-            epoch_str=epoch, library="my"
-        )
 
         if (time_code_id == 0b001) and (
-            self.get_total_seconds("1958-01-01T00:00:00Z") != 0
+            self.time_handler.total_seconds("1958-01-01T00:00:00Z") != 0
         ):
             raise EpochException(
                 "The epoch must be 1958 January 1 when time code identification is 1. "
                 f"The specified epoch is {epoch}."
             )
 
+        self.epoch = epoch
+        self.time_code_id = time_code_id
+        self.basic_time_unit = basic_time_unit
+        self.num_basic_octets = num_basic_octets
+        self.num_fractional_octets = num_fractional_octets
+
     def __str__(self) -> str:
+        time_code_id_str = {
+            0b001: '1958 January 1 epoch (Level 1 Time Code)',
+            0b010: 'Agency-defined epoch (Level 2 Time Code)',
+        }
         items = [
             "Time Code: CUC",
-            f"Epoch: {self.epoch}",
-            f"Time Code Identification: {self.time_code_id}",
+            f"Time Code Identification: {self.time_code_id} ... {time_code_id_str[self.time_code_id]}",
             f"Basic time unit: {self.basic_time_unit}",
             f"Number of basic octets: {self.num_basic_octets}",
             f"Number of fractional octets: {self.num_fractional_octets}",
+            f"Epoch: {self.epoch}",
         ]
         return "\n".join(items)
 
@@ -84,7 +87,9 @@ class CCSDS_TimeCode_CUC:
         Returns:
             bytes: A byte sequence representing the T-field.
         """
-        total_seconds = self.get_total_seconds(utc)
+        total_seconds = self.time_handler.total_seconds(utc)
+        if total_seconds is None:
+            return bytes()
 
         # Calculate basic time octets
         basic_time_octets = [
@@ -129,8 +134,7 @@ class CCSDS_TimeCode_CUC:
             elapsed_seconds *= 256
             elapsed_seconds += value
         elapsed_seconds /= 2 ** (-p_field["num_fractional_octets"] * 8)
-
-        return self.utc_string(elapsed_seconds)
+        return p_field, self.time_handler.utc_string(elapsed_seconds)
 
     def get_total_seconds(self, utc):
         """

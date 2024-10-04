@@ -76,23 +76,23 @@ class TestCcsdsTimecodeCuc(unittest.TestCase):
         """
         Epoch:  1958-01-01 00:00:00 TAI
         Target: 1962-01-01T00:00:00 UTC (old)
-        total seconds: 126230400.0 (no leap seconds)
-        HEX: 0x7861f80
+        total seconds: 126230401.845858
+        HEX: 0x7861f81 + 0.845858
         """
         cuc = CCSDS_TimeCode_CUC(num_basic_octets=4, num_fractional_octets=0)
-        p_field, utcstr = cuc.unpack_time_code(bytes([0x1C, 0x07, 0x86, 0x1F, 0x80]))
-        expected = "1962-01-01T00:00:00.000000"
+        p_field, utcstr = cuc.unpack_time_code(bytes([0x1C, 0x07, 0x86, 0x1F, 0x81]))
+        expected = "1961-12-31T23:59:59.154142"
         self.assertEqual(utcstr, expected)
 
     def test_unpack_1972_01_01_utc(self):
         """
         Epoch:  1958-01-01 00:00:00 TAI
         Target: 1972-01-01T00:00:00 UTC
-        total seconds: 441763200
-        HEX: 0x1a54c580
+        total seconds: 441763210
+        HEX: 0x1a54c58a
         """
         cuc = CCSDS_TimeCode_CUC(num_basic_octets=4, num_fractional_octets=0)
-        p_field, utcstr = cuc.unpack_time_code(bytes([0x1C, 0x1A, 0x54, 0xC5, 0x80]))
+        p_field, utcstr = cuc.unpack_time_code(bytes([0x1C, 0x1A, 0x54, 0xC5, 0x8A]))
         expected = "1972-01-01T00:00:00.000000"
         self.assertEqual(utcstr, expected)
 
@@ -113,11 +113,16 @@ class TestCcsdsTimecodeCuc(unittest.TestCase):
         - Total days = (42 years * 365 days/year) + 10 leap days = 15340 days
 
         3. Total seconds calculation:
-        - Total seconds = (15340 days * 86400 seconds/day) = 1325376000
-        - Hexadecimal representation: 0x4effa200
+        - Total seconds = (15340 days * 86400 seconds/day) + offset + total leap seconds
+        - Offset: 10 seconds as of 1972-01-01
+        - Total leap seconds: 22 seconds as of 2000-01-01
+
+        4. Final total seconds:
+        - 1325376000 + 10 + 22 = 1325376032 seconds
+        - Hexadecimal representation: 0x4effa220
         """
         cuc = CCSDS_TimeCode_CUC(num_basic_octets=4, num_fractional_octets=0)
-        p_field, utcstr = cuc.unpack_time_code(bytes([0x1C, 0x4E, 0xFF, 0xA2, 0x00]))
+        p_field, utcstr = cuc.unpack_time_code(bytes([0x1C, 0x4E, 0xFF, 0xA2, 0x20]))
         expected = "2000-01-01T00:00:00.000000"
         self.assertEqual(utcstr, expected)
 

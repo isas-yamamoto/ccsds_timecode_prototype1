@@ -26,6 +26,21 @@ class CCSDS_TimeCode_CDS:
         self.length_of_subms_segment = length_of_subms_segment
         self.time_handler = TimeHandler.create_handler(epoch, library)
 
+    def __str__(self) -> str:
+        epoch_id_str = {
+            0: "1958 January 1 epoch (Level 1 Time Code)",
+            1: "Agency-defined epoch (Level 2 Time Code)",
+        }
+        items = [
+            "Time Code: CDS",
+            f"Epoch Identification: {self.epoch_id} ... {epoch_id_str[self.epoch_id]}",
+            f"Time Code Identification: {self.time_code_id}",
+            f"Length of day segment: {self.length_of_day_segment}",
+            f"Length of submillisecond segment: {self.length_of_subms_segment}",
+            f"Epoch: {self.epoch}",
+        ]
+        return "\n".join(items)
+
     def get_p_field(self):
         """
         Get the P-field according to CCSDS CDS specification.
@@ -47,6 +62,28 @@ class CCSDS_TimeCode_CDS:
 
         return bytes([p_field_bits])
 
+    def get_contents(self, total_seconds):
+        """
+        Convert a time duration given in total seconds into three components:
+        - days: The total number of full days (24-hour periods) within the given seconds.
+        - ms_of_day: The remaining milliseconds within the current day (after accounting for full days).
+        - rem: The remaining fractional seconds (sub-millisecond precision) after removing the full days and milliseconds.
+
+        Parameters:
+        - total_seconds (float): The total duration in seconds, potentially including fractional seconds.
+
+        Returns:
+        - tuple: A tuple containing:
+            - days (int): The number of full days.
+            - ms_of_day (int): The number of milliseconds that remain within the current day.
+            - rem (float): The remaining fractional seconds (sub-millisecond part).
+        """
+        days = int(math.floor(total_seconds // 86400))
+        rem = total_seconds - (days * 86400)
+        ms_of_day = int(math.floor(rem * 1e3))
+        rem -= ms_of_day * 1e-3
+        return days, ms_of_day, rem
+
     def get_t_field(self, utc):
         """
         Get the T-field as a byte sequence from a given UTC time.
@@ -61,18 +98,13 @@ class CCSDS_TimeCode_CDS:
         if total_seconds is None:
             return bytes()
 
-        # Prepare DAY
-        days = int(math.floor(total_seconds // 86400))
+        days, ms_of_day, rem = self.get_contents(total_seconds)
         if self.length_of_day_segment == 0:
             day_octets = pack(">H", days)
         else:
             day_octets = pack(">I", days)[1:]
-        rem = total_seconds - (days * 86400)
 
-        # Calculate ms_of_day
-        ms_of_day = int(math.floor(rem * 1e3))
         ms_octets = pack(">I", ms_of_day)
-        rem -= ms_of_day * 1e-3
 
         if self.length_of_subms_segment == 0b00:
             subms_octets = bytes([])
