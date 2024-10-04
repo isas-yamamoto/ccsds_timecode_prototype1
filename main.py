@@ -57,7 +57,6 @@ def main():
     elif args.code == "CDS":
         time_code = CCSDS_TimeCode_CDS(
             epoch=args.epoch,
-            time_code_id=0b100,
             epoch_id=0b0,
             length_of_day_segment=0b0,
             length_of_subms_segment=0b01,
