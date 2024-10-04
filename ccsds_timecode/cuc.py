@@ -1,9 +1,26 @@
-from time_handler import TimeHandler
+from datetime import datetime, timedelta
 from time_exceptions import (
     TimeCodeIdentificationException,
     EpochException,
     OctetSizeException,
 )
+
+
+def _strptime(date_string: str) -> datetime:
+    formats = [
+        "%Y-%m-%dT%H:%M:%S.%f",
+        "%Y-%m-%dT%H:%M:%S.%fZ",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M:%SZ",
+    ]
+    dt = None
+    for format in formats:
+        try:
+            dt = datetime.strptime(date_string, format)
+            break
+        except ValueError:
+            pass
+    return dt
 
 
 class CCSDS_TimeCode_CUC:
@@ -22,22 +39,20 @@ class CCSDS_TimeCode_CUC:
             raise TimeCodeIdentificationException(
                 "Time code identification must be 1 or 2 for CUC."
             )
-
-        self.time_handler = TimeHandler.create_handler(epoch, library)
-
-        if (time_code_id == 0b001) and (
-            self.time_handler.total_seconds("1958-01-01T00:00:00Z") != 0
-        ):
-            raise EpochException(
-                "The epoch must be 1958 January 1 when time code identification is 1. "
-                f"The specified epoch is {epoch}."
-            )
-
         self.epoch = epoch
         self.time_code_id = time_code_id
         self.basic_time_unit = basic_time_unit
         self.num_basic_octets = num_basic_octets
         self.num_fractional_octets = num_fractional_octets
+        self.dt_epoch = _strptime(self.epoch)
+
+        if (time_code_id == 0b001) and (
+            self.get_total_seconds("1958-01-01T00:00:00Z") != 0
+        ):
+            raise EpochException(
+                "The epoch must be 1958 January 1 when time code identification is 1. "
+                f"The specified epoch is {epoch}."
+            )
 
     def get_p_field(self):
         """
@@ -72,9 +87,7 @@ class CCSDS_TimeCode_CUC:
         Returns:
             bytes: A byte sequence representing the T-field.
         """
-        total_seconds = self.time_handler.total_seconds(utc)
-        if total_seconds is None:
-            return bytes()
+        total_seconds = self.get_total_seconds()
 
         # Calculate basic time octets
         basic_time_octets = [
@@ -119,7 +132,9 @@ class CCSDS_TimeCode_CUC:
             elapsed_seconds *= 256
             elapsed_seconds += value
         elapsed_seconds /= 2 ** (-p_field["num_fractional_octets"] * 8)
-        return p_field, self.time_handler.utc_string(elapsed_seconds)
+
+        dt = self.dt_epoch + timedelta(seconds=elapsed_seconds)
+        return p_field, dt.strftime("%Y-%m-%dT%H:%M:%S.%f")
 
     def get_total_seconds(self, utc):
         """
@@ -131,7 +146,12 @@ class CCSDS_TimeCode_CUC:
         Returns:
             float: Total seconds between the epoch and the given UTC time.
         """
-        return self.time_handler.total_seconds(utc)
+        dt_utc = _strptime(utc)
+
+        if dt_utc is None:
+            raise ValueError("Time format is not supported.")
+
+        return (dt_utc - self.dt_epoch).total_seconds()
 
     def utc_string(self, elapsed_seconds: float) -> str:
         return self.time_handler.utc_string(elapsed_seconds)
