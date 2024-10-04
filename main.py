@@ -1,6 +1,7 @@
 import argparse
+from datetime import datetime
 from ccsds_timecode.cuc import CCSDS_TimeCode_CUC
-
+from ccsds_timecode.cds import CCSDS_TimeCode_CDS
 
 def hexdump(data, sep=""):
     """Convert a byte sequence to a hex dump."""
@@ -15,6 +16,13 @@ def main():
 
     # Add arguments for epoch, UTC time, and library
     parser.add_argument(
+        "--code",
+        type=str,
+        choices=["CUC", "CDS"],
+        default="CUC",
+        help="The time code to use for time conversion ('CUC', or 'CDS').",
+    )
+    parser.add_argument(
         "--epoch",
         type=str,
         default="1958-01-01T00:00:00Z",
@@ -23,7 +31,7 @@ def main():
     parser.add_argument(
         "--utc",
         type=str,
-        default="2024-01-01T00:00:00Z",
+        default=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         help="The UTC time string in ISO 8601 format.",
     )
     parser.add_argument(
@@ -37,19 +45,30 @@ def main():
     # Parse arguments
     args = parser.parse_args()
 
-    # Initialize CCSDS_TimeCode_CUC with the parsed library
-    ccsds_time_code = CCSDS_TimeCode_CUC(
-        epoch=args.epoch,
-        basic_time_unit=1,
-        num_basic_octets=4,
-        num_fractional_octets=2,
-        library=args.library,
-    )
+    if args.code == "CUC":
+        time_code = CCSDS_TimeCode_CUC(
+            epoch=args.epoch,
+            basic_time_unit=1,
+            num_basic_octets=4,
+            num_fractional_octets=2,
+            library=args.library,
+        )
+    elif args.code == "CDS":
+        time_code = CCSDS_TimeCode_CDS(
+            epoch=args.epoch,
+            time_code_id=0b100,
+            epoch_id=0b0,
+            length_of_day_segment=0b0,
+            length_of_subms_segment=0b01,
+            library=args.library,
+        )
 
     # Output results
-    print(f"P-Field: {hexdump(ccsds_time_code.get_p_field(), ' ')}")
-    print(f"T-Field: {hexdump(ccsds_time_code.get_t_field(args.utc), ' ')}")
-    print(f"Total Seconds: {ccsds_time_code.get_total_seconds(args.utc):.16f}")
+    print(time_code)
+    print(f"UTC: {args.utc}")
+    print(f"P-Field: {hexdump(time_code.get_p_field(), ' ')}")
+    print(f"T-Field: {hexdump(time_code.get_t_field(args.utc), ' ')}")
+    print(f"Total Seconds: {time_code.get_total_seconds(args.utc):.16f}")
 
 
 if __name__ == "__main__":
