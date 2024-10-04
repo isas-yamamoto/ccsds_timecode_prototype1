@@ -75,9 +75,9 @@ class MyTimeHandler(TimeHandlerBase):
         P("2017-01-01", "1972-01-01", "37.0", "0.0"),
     ]
 
-    def __init__(self, epoch_str: str, prec: int = 256):
+    def __init__(self, epoch_str: str, precision: int = 256):
         super().__init__(epoch_str)
-        self.set_precision(prec)
+        self.set_precision(precision)
         self.ts_epoch = self._timestamp(self.epoch_str)
         self.ts_tai_epoch = self._timestamp("1958-01-01T00:00:00Z")
 
