@@ -18,7 +18,7 @@ class CCSDS_TimeCode_CDS:
     ):
         if length_of_subms_segment == 0b11:
             raise ReservedForFutureUse("not implemented")
-        
+
         self.epoch = epoch
         self.time_code_id = time_code_id
         self.epoch_id = epoch_id
