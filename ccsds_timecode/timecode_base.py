@@ -32,6 +32,9 @@ class CCSDS_TimeCode(ABC):
         """
         return self.time_handler.utc_string(elapsed_seconds)
 
+    def get_contents(self, elapsed_seconds: float) -> dict:
+        return {}
+
     @abstractmethod
     def get_p_field(self):
         """
