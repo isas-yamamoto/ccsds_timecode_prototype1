@@ -6,8 +6,7 @@ import gmpy2
 
 class TestTai(unittest.TestCase):
     def setUp(self):
-        time_handler = TimeHandler()
-        self.handler = time_handler.create_handler(
+        self.handler = TimeHandler.create_handler(
             epoch_str="1958-01-01T00:00:00Z", library="my"
         )
         self.delta = gmpy2.mpfr("1e-16")
