@@ -41,8 +41,8 @@ class CCSDS_TimeCode_CUC(CCSDS_TimeCode):
 
     def __str__(self) -> str:
         time_code_id_str = {
-            0b001: '1958 January 1 epoch (Level 1 Time Code)',
-            0b010: 'Agency-defined epoch (Level 2 Time Code)',
+            0b001: "1958 January 1 epoch (Level 1 Time Code)",
+            0b010: "Agency-defined epoch (Level 2 Time Code)",
         }
         items = [
             "Time Code: CUC",
