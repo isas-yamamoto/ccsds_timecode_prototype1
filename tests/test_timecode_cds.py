@@ -1,7 +1,7 @@
 import unittest
+from struct import unpack
 from ccsds_timecode.cds import CCSDS_TimeCode_CDS
 from time_exceptions import (
-    TimeCodeIdentificationException,
     EpochException,
     OctetSizeException,
     ReservedForFutureUse,
@@ -9,6 +9,29 @@ from time_exceptions import (
 
 
 class TestCcsdsTimecodeCds(unittest.TestCase):
+    def test_p_field_identification_tai_epoch(self):
+        cuc = CCSDS_TimeCode_CDS(epoch_id=0b0)
+        epoch_id_mask = 0b0_000_1_0_00
+        expected = 0b0_000_0_0_00
+        actual = (unpack("B", cuc.get_p_field())[0]) & epoch_id_mask
+        self.assertEqual(actual, expected)
+
+    def test_p_field_identification_agency_defined_epoch(self):
+        cuc = CCSDS_TimeCode_CDS(epoch_id=0b1)
+        epoch_id_mask = 0b0_000_1_0_00
+        expected = 0b0_000_1_0_00
+        actual = (unpack("B", cuc.get_p_field())[0]) & epoch_id_mask
+        self.assertEqual(actual, expected)
+
+    def test_invalid_epoch(self):
+        with self.assertRaises(EpochException):
+            CCSDS_TimeCode_CDS(epoch="1958-01-01T00:00:01", epoch_id=0b1)
+
+    def test_octet_size(self):
+        with self.assertRaises(OctetSizeException):
+            cds = CCSDS_TimeCode_CDS()
+            cds.unpack_time_code(bytes([0x40, 00]))
+
     def test_1958_01_01(self):
         """
         total_seconds:  0
@@ -153,6 +176,6 @@ class TestCcsdsTimecodeCds(unittest.TestCase):
         day = bytes([0x00, 0x00])
         ms = bytes([0x00, 0x00, 0x00, 0x00])
         subms = bytes([])
-        _, utcstr = cds.unpack_time_code(p_field + day + ms + subms)
+        _, actual = cds.unpack_time_code(p_field + day + ms + subms)
         expected = "1958-01-01T00:00:00.000000"
-        self.assertEqual(utcstr, expected)
+        self.assertEqual(actual, expected)
