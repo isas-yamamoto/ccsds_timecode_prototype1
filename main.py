@@ -3,6 +3,7 @@ from datetime import datetime
 from ccsds_timecode.cuc import CCSDS_TimeCode_CUC
 from ccsds_timecode.cds import CCSDS_TimeCode_CDS
 
+
 def hexdump(data, sep=""):
     """Convert a byte sequence to a hex dump."""
     return sep.join([f"{x:02x}" for x in data])
@@ -63,12 +64,17 @@ def main():
             library=args.library,
         )
 
+    total_seconds = time_code.get_total_seconds(args.utc)
+    contents = time_code.get_contents(total_seconds)
     # Output results
     print(time_code)
+    print(f"Total Seconds: {total_seconds:.16f}")
+    for key, val in contents.items():
+        print(f"{key}: {val}")
+    print("---")
     print(f"UTC: {args.utc}")
-    print(f"P-Field: {hexdump(time_code.get_p_field(), ' ')}")
-    print(f"T-Field: {hexdump(time_code.get_t_field(args.utc), ' ')}")
-    print(f"Total Seconds: {time_code.get_total_seconds(args.utc):.16f}")
+    print(f"P-Field(hex): {hexdump(time_code.get_p_field(), ' ')}")
+    print(f"T-Field(hex): {hexdump(time_code.get_t_field(args.utc), ' ')}")
 
 
 if __name__ == "__main__":
