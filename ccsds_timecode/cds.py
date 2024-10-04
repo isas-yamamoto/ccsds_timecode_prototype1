@@ -1,6 +1,6 @@
 import math
 from struct import pack
-from time_exceptions import OctetSizeException, ReservedForFutureUse
+from time_exceptions import EpochException, OctetSizeException, ReservedForFutureUse
 from ccsds_timecode.timecode_base import CCSDS_TimeCode
 
 
@@ -18,7 +18,6 @@ class CCSDS_TimeCode_CDS(CCSDS_TimeCode):
     def __init__(
         self,
         epoch="1958-01-01T00:00:00Z",
-        time_code_id=0b100,
         epoch_id=0b0,
         length_of_day_segment=0b0,
         length_of_subms_segment=0b01,
@@ -30,10 +29,18 @@ class CCSDS_TimeCode_CDS(CCSDS_TimeCode):
             raise ReservedForFutureUse("not implemented")
 
         self.epoch = epoch
-        self.time_code_id = time_code_id
+        self.time_code_id = 0b100
         self.epoch_id = epoch_id
         self.length_of_day_segment = length_of_day_segment
         self.length_of_subms_segment = length_of_subms_segment
+
+        if (epoch_id == 0b001) and (
+            self.time_handler.total_seconds("1958-01-01T00:00:00Z") != 0
+        ):
+            raise EpochException(
+                "The epoch must be 1958 January 1 when time code identification is 1. "
+                f"The specified epoch is {epoch}."
+            )
 
     def __str__(self) -> str:
         epoch_id_str = {
@@ -89,7 +96,7 @@ class CCSDS_TimeCode_CDS(CCSDS_TimeCode):
         rem = total_seconds - (days * 86400)
         ms_of_day = int(math.floor(rem * 1e3))
         rem -= ms_of_day * 1e-3
-        return days, ms_of_day, rem
+        return {"days": days, "ms_of_day": ms_of_day, "subms_of_ms": rem}
 
     def get_t_field(self, utc):
         """
@@ -105,23 +112,23 @@ class CCSDS_TimeCode_CDS(CCSDS_TimeCode):
         if total_seconds is None:
             return bytes()
 
-        days, ms_of_day, rem = self.get_contents(total_seconds)
+        contents = self.get_contents(total_seconds)
         if self.length_of_day_segment == 0:
-            day_octets = pack(">H", days)
+            day_octets = pack(">H", contents["days"])
         else:
-            day_octets = pack(">I", days)[1:]
+            day_octets = pack(">I", contents["days"])[1:]
 
-        ms_octets = pack(">I", ms_of_day)
+        ms_octets = pack(">I", contents["ms_of_day"])
 
         if self.length_of_subms_segment == 0b00:
             subms_octets = bytes([])
         else:
             if self.length_of_subms_segment == 0b01:
-                rem *= 1e6
-                subms_octets = pack(">H", int(rem))
+                subms = contents["subms_of_ms"] * 1e6
+                subms_octets = pack(">H", int(subms))
             elif self.length_of_subms_segment == 0b10:
-                rem *= 1e12
-                subms_octets = pack(">I", int(rem))
+                subms = contents["subms_of_ms"] * 1e12
+                subms_octets = pack(">I", int(subms))
         return day_octets + ms_octets + subms_octets
 
     def unpack_time_code(self, time_code: bytes) -> tuple:
