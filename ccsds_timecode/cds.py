@@ -1,7 +1,8 @@
 import math
 from struct import pack
 from time_exceptions import EpochException, OctetSizeException, ReservedForFutureUse
-from ccsds_timecode.timecode_base import CCSDS_TimeCode, unpack_uint
+from ccsds_timecode.timecode_base import CCSDS_TimeCode
+from ccsds_timecode.utils import unpack_uint
 
 
 class CCSDS_TimeCode_CDS(CCSDS_TimeCode):
