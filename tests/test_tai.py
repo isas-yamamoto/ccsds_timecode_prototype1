@@ -72,12 +72,12 @@ class TestTai(unittest.TestCase):
 
     def test_1961_01_02_utc(self):
         """
-        Tests the total seconds from January 1, 1958, to Janulary 2, 1961.
+        Tests the total seconds from January 1, 1958, to January 2, 1961.
 
         Key points:
         - As of January 1, 1961, the UTC-TAI difference was 1.4228180 seconds,
         with a daily increase of 0.001296 seconds from that date.
-        - The total difference on Janulary 2, 1961 was 1.424114 seconds.
+        - The total difference on January 2, 1961 was 1.424114 seconds.
         - 1960 was a leap year, so total seconds from 1958 to Jan 2, 1961:
         (3 years * 365 days) + 1 day + 1 leap day = 1097 days.
         - Total seconds:

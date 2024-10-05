@@ -33,7 +33,7 @@ class CCSDS_TimeCode_CCS(CCSDS_TimeCode):
 
     def get_p_field(self):
         """
-        Get the P-field according to CCSDS CDS specification.
+        Get the P-field according to CCSDS CCS specification.
 
         Returns:
             int: The P-field as an integer value.
