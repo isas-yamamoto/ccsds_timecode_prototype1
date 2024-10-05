@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 from ccsds_timecode.cuc import CCSDS_TimeCode_CUC
 from ccsds_timecode.cds import CCSDS_TimeCode_CDS
+from ccsds_timecode.ccs import CCSDS_TimeCode_CCS
 
 
 def hexdump(data, sep=""):
@@ -19,9 +20,9 @@ def main():
     parser.add_argument(
         "--code",
         type=str,
-        choices=["CUC", "CDS"],
+        choices=["CUC", "CDS", "CCS"],
         default="CUC",
-        help="The time code to use for time conversion ('CUC', or 'CDS').",
+        help="The time code to use for time conversion ('CUC', 'CDS', or 'CCS').",
     )
     parser.add_argument(
         "--epoch",
@@ -62,14 +63,20 @@ def main():
             length_of_subms_segment=0b01,
             library=args.library,
         )
+    elif args.code == "CCS":
+        time_code = CCSDS_TimeCode_CCS(
+            calendar_variation_flag=0b0,
+            resolution=0b110,
+            library=args.library,
+        )
 
-    total_seconds = time_code.get_total_seconds(args.utc)
-    contents = time_code.get_contents(total_seconds)
-    # Output results
     print(time_code)
-    print(f"Total Seconds: {total_seconds:.16f}")
-    for key, val in contents.items():
-        print(f"{key}: {val}")
+    if args.code in ["CUC", "CDS"]:
+        total_seconds = time_code.get_total_seconds(args.utc)
+        print(f"Total Seconds: {total_seconds:.16f}")
+        contents = time_code.get_contents(total_seconds)
+        for key, val in contents.items():
+            print(f"{key}: {val}")
     print("---")
     print(f"UTC: {args.utc}")
     print(f"P-Field(hex): {hexdump(time_code.get_p_field(), ' ')}")

@@ -1,15 +1,7 @@
 import math
 from struct import pack
 from time_exceptions import EpochException, OctetSizeException, ReservedForFutureUse
-from ccsds_timecode.timecode_base import CCSDS_TimeCode
-
-
-def unpack_uint(data):
-    value = 0
-    for datum in data:
-        value <<= 8
-        value += datum
-    return value
+from ccsds_timecode.timecode_base import CCSDS_TimeCode, unpack_uint
 
 
 class CCSDS_TimeCode_CDS(CCSDS_TimeCode):
