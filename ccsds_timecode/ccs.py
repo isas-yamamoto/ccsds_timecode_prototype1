@@ -76,14 +76,15 @@ class CCSDS_TimeCode_CCS(CCSDS_TimeCode):
             data = year + doy + h + m + s
 
         optional = bytes([])
-        size_optional = 2 * self.resolution
 
-        if len(cols) == 2:
-            frac_str = cols[1][:size_optional]
-            frac_str += "0" * (size_optional - len(frac_str))
-            optional = pack_uint(int2bcd(frac_str))
-        else:
-            optional = bytes([0x00] * self.resolution)
+        if self.resolution > 0:
+            if len(cols) == 2:
+                size_optional = 2 * self.resolution
+                frac_str = cols[1][:size_optional]
+                frac_str += "0" * (size_optional - len(frac_str))
+                optional = pack_uint(int2bcd(frac_str))
+            else:
+                optional = bytes([0x00] * self.resolution)
         return data + optional
 
     def unpack_time_code(self, time_code: bytes) -> tuple:

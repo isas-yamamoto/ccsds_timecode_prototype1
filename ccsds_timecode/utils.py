@@ -9,6 +9,8 @@ def int2bcd(data):
 
 
 def pack_uint(value):
+    if value == 0:
+        return bytes([0x00])
     data = []
     while value > 0:
         data.insert(0, value & 0xFF)
