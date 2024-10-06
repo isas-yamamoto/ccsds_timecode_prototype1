@@ -1,10 +1,7 @@
 from datetime import datetime
 from time_exceptions import NotUsedException, OctetSizeException
-from ccsds_timecode.timecode_base import (
-    CCSDS_TimeCode,
-    pack_uint,
-    int2bcd,
-)
+from ccsds_timecode.timecode_base import CCSDS_TimeCode
+from ccsds_timecode.utils import pack_uint, int2bcd
 
 
 class CCSDS_TimeCode_CCS(CCSDS_TimeCode):
