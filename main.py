@@ -3,6 +3,7 @@ from datetime import datetime
 from ccsds_timecode.cuc import CCSDS_TimeCode_CUC
 from ccsds_timecode.cds import CCSDS_TimeCode_CDS
 from ccsds_timecode.ccs import CCSDS_TimeCode_CCS
+from ccsds_timecode.ascii import CCSDS_TimeCode_ASCII
 
 
 def hexdump(data, sep=""):
@@ -20,9 +21,9 @@ def main():
     parser.add_argument(
         "--code",
         type=str,
-        choices=["CUC", "CDS", "CCS"],
+        choices=["CUC", "CDS", "CCS", "ASCII"],
         default="CUC",
-        help="The time code to use for time conversion ('CUC', 'CDS', or 'CCS').",
+        help="The time code to use for time conversion ('CUC', 'CDS', 'CCS', or 'ASCII').",
     )
     parser.add_argument(
         "--epoch",
@@ -69,6 +70,8 @@ def main():
             resolution=0b110,
             library=args.library,
         )
+    elif args.code == "ASCII":
+        time_code = CCSDS_TimeCode_ASCII()
 
     print(time_code)
     if args.code in ["CUC", "CDS"]:
@@ -79,7 +82,9 @@ def main():
             print(f"{key}: {val}")
     print("---")
     print(f"UTC: {args.utc}")
-    print(f"P-Field(hex): {hexdump(time_code.get_p_field(), ' ')}")
+    p_field = time_code.get_p_field()
+    if p_field is not None:
+        print(f"P-Field(hex): {hexdump(p_field, ' ')}")
     print(f"T-Field(hex): {hexdump(time_code.get_t_field(args.utc), ' ')}")
 
 
