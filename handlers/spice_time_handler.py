@@ -45,3 +45,10 @@ class SpiceTimeHandler(TimeHandlerBase):
         """Convert elapsed seconds since the epoch to a UTC string in ISO format."""
         utc_et = self.epoch_et + elapsed_seconds
         return spice.et2utc(utc_et, "ISOC", 6)
+
+    def cal_to_jd(self, year: int, month: int, day: int) -> float:
+        """Convert a calendar date to Julian Day."""
+        et = spice.utc2et(f"{year:04d}-{month:02d}-{day:02d}T00:00:00")
+        jd_str = spice.et2utc(et, "J", 6)
+        return float(jd_str.split()[1])
+        

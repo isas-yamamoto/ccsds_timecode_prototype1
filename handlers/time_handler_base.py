@@ -20,3 +20,4 @@ class TimeHandlerBase(ABC):
     @abstractmethod
     def cal_to_jd(year: int, month: int, day: int) -> float:
         """Convert a calendar date to Julian Day."""
+        pass

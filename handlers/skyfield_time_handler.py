@@ -22,7 +22,9 @@ class SkyfieldTimeHandler(TimeHandlerBase):
         self.epoch_time = self._utc2time(self.epoch_str)
 
     def _utc2time(self, utc_str):
-        dt = datetime.strptime(utc_str, "%Y-%m-%dT%H:%M:%S%z")
+        if utc_str[-1] == "Z":
+            utc_str = utc_str[:-1]
+        dt = datetime.strptime(utc_str, "%Y-%m-%dT%H:%M:%S")
         utc_time = self.ts.from_datetime(dt.replace(tzinfo=utc))
         if utc_time < self.boundary_time:
             utc_time -= 10.0 / 86400
@@ -42,3 +44,8 @@ class SkyfieldTimeHandler(TimeHandlerBase):
         """Convert elapsed seconds since the epoch to a UTC string in ISO format."""
         utc_time = self.epoch_time + timedelta(seconds=elapsed_seconds)
         return utc_time.utc_strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+    def cal_to_jd(self, year: int, month: int, day: int) -> float:
+        """Convert a calendar date to Julian Day."""
+        t = self.ts.utc(year, month, day)
+        return t.tt

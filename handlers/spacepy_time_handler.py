@@ -27,3 +27,8 @@ class SpacepyTimeHandler(TimeHandlerBase):
         """Convert elapsed seconds since the epoch to a UTC string in ISO format."""
         dt = self.epoch_dt + timedelta(seconds=elapsed_seconds)
         return dt.UTC.strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+    def cal_to_jd(self, year: int, month: int, day: int) -> float:
+        """Convert a calendar date to Julian Day."""
+        t = spt.Ticktock(f"{year:04d}-{month:02d}-{day:02d}T00:00:00", "ISO")
+        return t.JD

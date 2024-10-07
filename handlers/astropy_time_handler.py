@@ -28,3 +28,9 @@ class AstropyTimeHandler(TimeHandlerBase):
         utc.format = "isot"
         utc.precision = precision
         return str(utc)
+    
+    def cal_to_jd(self, year: int, month: int, day: int) -> float:
+        """Convert a calendar date to Julian Day."""
+        t = Time(f"{year:04d}-{month:02d}-{day:02d}")
+        return t.jd
+    
