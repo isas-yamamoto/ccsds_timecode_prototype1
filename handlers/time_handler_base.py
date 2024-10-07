@@ -16,3 +16,7 @@ class TimeHandlerBase(ABC):
     def utc_string(self, elapsed_seconds: float) -> str:
         """Convert elapsed seconds since the epoch to a UTC string in ISO format."""
         pass
+
+    @abstractmethod
+    def cal_to_jd(year: int, month: int, day: int) -> float:
+        """Convert a calendar date to Julian Day."""

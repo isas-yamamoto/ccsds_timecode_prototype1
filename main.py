@@ -4,7 +4,7 @@ from ccsds_timecode.cuc import CCSDS_TimeCode_CUC
 from ccsds_timecode.cds import CCSDS_TimeCode_CDS
 from ccsds_timecode.ccs import CCSDS_TimeCode_CCS
 from ccsds_timecode.ascii import CCSDS_TimeCode_ASCII
-
+from ccsds_timecode.pb5j import TimeCode_PB5J
 
 def hexdump(data, sep=""):
     """Convert a byte sequence to a hex dump."""
@@ -21,9 +21,9 @@ def main():
     parser.add_argument(
         "--code",
         type=str,
-        choices=["CUC", "CDS", "CCS", "ASCII"],
+        choices=["CUC", "CDS", "CCS", "ASCII", "PB5J"],
         default="CUC",
-        help="The time code to use for time conversion ('CUC', 'CDS', 'CCS', or 'ASCII').",
+        help="The time code to use for time conversion ('CUC', 'CDS', 'CCS', 'ASCII', or 'PB5J').",
     )
     parser.add_argument(
         "--epoch",
@@ -72,6 +72,8 @@ def main():
         )
     elif args.code == "ASCII":
         time_code = CCSDS_TimeCode_ASCII()
+    elif args.code == "PB5J":
+        time_code = TimeCode_PB5J()
 
     print(time_code)
     if args.code in ["CUC", "CDS"]:

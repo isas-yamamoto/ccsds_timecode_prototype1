@@ -154,3 +154,49 @@ class MyTimeHandler(TimeHandlerBase):
                 break
         dt = datetime(1970, 1, 1) + timedelta(seconds=float(ts_utc))
         return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+
+    def cal_to_jd(self, year: int, month: int, day: int) -> float:
+        """
+        Convert a calendar date to Julian Day.
+
+        Reference:
+        - SOFA iauCal2jd() function
+        <http://www.iausofa.org/current_C.html>
+        """
+        # Earliest year allowed (4800BC)
+        YEAR_MIN = -4799
+
+        # Month lengths in days
+        month_lengths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+        # Preset status.
+        ret = 0
+
+        # Validate year and month.
+        if year < YEAR_MIN:
+            raise ValueError(f"Invalid year: {year}")
+
+        if month < 1 or month > month:
+            raise ValueError(f"Invalid month: {month}")
+
+        # If February in a leap year, 1, otherwise 0.
+        is_leap_year = (month == 2) and (
+            (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+        )
+
+        # Validate day
+        max_day = month_lengths[month - 1] + (1 if is_leap_year else 0)
+        if day < 1 or day > max_day:
+            raise ValueError(f"Invalid day: {day}")
+
+        # Julian Day calculation
+        my = int((month - 14) / 12)
+        adjusted_year = year + my
+
+        a = int((1461 * (adjusted_year + 4800)) / 4)
+        b = int((367 * (month - 2 - 12 * my)) / 12)
+        c = (3 * ((adjusted_year + 4900) // 100)) // 4
+        modified_julian_day = a + b - c + day - 2432076
+
+        return 2400000.5 + modified_julian_day
