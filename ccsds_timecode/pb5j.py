@@ -1,6 +1,6 @@
 from datetime import datetime
 from ccsds_timecode.timecode_base import CCSDS_TimeCode
-from time_handler import TimeHandler
+
 
 """
 Truncated Julian Day Count System (TJD)
@@ -94,12 +94,6 @@ class TimeCode_PB5J(CCSDS_TimeCode):
         Returns:
             bytes: A byte sequence representing the T-field.
         """
-
-        # JD 2449444 at noon on 1994 April 1.
-        # http://www.iausofa.org/sofa_ts_c.pdf
-        dt_base = datetime(1994, 4, 1, 12, 0, 0)
-        jd_base = 2449444
-
         cols = utc.split(".")
         if cols[0][-1] == "Z":
             cols[0] = cols[0][:-1]
